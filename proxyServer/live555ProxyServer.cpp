@@ -1,7 +1,7 @@
 /**********
 This library is free software; you can redistribute it and/or modify it under
 the terms of the GNU Lesser General Public License as published by the
-Free Software Foundation; either version 2.1 of the License, or (at your
+Free Software Foundation; either version 3 of the License, or (at your
 option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
 
 This library is distributed in the hope that it will be useful, but WITHOUT
@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2016, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2017, Live Networks, Inc.  All rights reserved
 // LIVE555 Proxy Server
 // main program
 
@@ -35,6 +35,7 @@ char* password = NULL;
 Boolean proxyREGISTERRequests = False;
 char* usernameForREGISTER = NULL;
 char* passwordForREGISTER = NULL;
+unsigned interPacketGapMaxTime = 0;
 
 static RTSPServer* createRTSPServer(Port port) {
   if (proxyREGISTERRequests) {
@@ -51,6 +52,7 @@ void usage() {
        << " [-p <rtspServer-port>]"
        << " [-u <username> <password>]"
        << " [-R] [-U <username-for-REGISTER> <password-for-REGISTER>]"
+       << " [-D <max-inter-packet-gap-time>]"
        << " <rtsp-url-1> ... <rtsp-url-n>\n";
   exit(1);
 }
@@ -58,7 +60,7 @@ void usage() {
 int main(int argc, char** argv) {
   // Increase the maximum size of video frames that we can 'proxy' without truncation.
   // (Such frames are unreasonably large; the back-end servers should really not be sending frames this large!)
-  OutPacketBuffer::maxSize = 100000; // bytes
+  OutPacketBuffer::maxSize = 2000000; // bytes
 
   // Begin by setting up our usage environment:
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
@@ -151,6 +153,19 @@ int main(int argc, char** argv) {
       break;
     }
 
+    case 'D': { // specify maximum number of seconds to wait for packets:
+      if (argc > 2 && argv[2][0] != '-') {
+        if (sscanf(argv[2], "%u", &interPacketGapMaxTime) == 1) {
+          ++argv; --argc;
+          break;
+        }
+      }
+
+      // If we get here, the option was specified incorrectly:
+      usage();
+      break;
+    }
+
     default: {
       usage();
       break;
@@ -221,7 +236,7 @@ int main(int argc, char** argv) {
     ServerMediaSession* sms
       = ProxyServerMediaSession::createNew(*env, rtspServer,
 					   proxiedStreamURL, streamName,
-					   username, password, tunnelOverHTTPPortNum, verbosityLevel);
+					   username, password, tunnelOverHTTPPortNum, verbosityLevel, -1, NULL, interPacketGapMaxTime);
     rtspServer->addServerMediaSession(sms);
 
     char* proxyStreamURL = rtspServer->rtspURL(sms);

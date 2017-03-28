@@ -1,7 +1,7 @@
 /**********
 This library is free software; you can redistribute it and/or modify it under
 the terms of the GNU Lesser General Public License as published by the
-Free Software Foundation; either version 2.1 of the License, or (at your
+Free Software Foundation; either version 3 of the License, or (at your
 option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
 
 This library is distributed in the hope that it will be useful, but WITHOUT
@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2016, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2017, Live Networks, Inc.  All rights reserved
 // A test program that demonstrates how to stream - via unicast RTP
 // - various kinds of file on demand, using a built-in RTSP server.
 // main program
@@ -265,7 +265,7 @@ int main(int argc, char** argv) {
   // A DV video stream:
   {
     // First, make sure that the RTPSinks' buffers will be large enough to handle the huge size of DV frames (as big as 288000).
-    OutPacketBuffer::maxSize = 300000;
+    OutPacketBuffer::maxSize = 2000000;
 
     char const* streamName = "dvVideoTest";
     char const* inputFileName = "test.dv";
@@ -409,7 +409,7 @@ int main(int argc, char** argv) {
         // (Note: If the input UDP source is unicast rather than multicast, then change this to NULL.)
     portNumBits const inputPortNum = 1234;
         // This causes the server to take its input from the stream sent by the "testMPEG2TransportStreamer" demo application.
-    Boolean const inputStreamIsRawUDP = False; 
+    Boolean const inputStreamIsRawUDP = False;
     ServerMediaSession* sms
       = ServerMediaSession::createNew(*env, streamName, streamName,
 				      descriptionString);

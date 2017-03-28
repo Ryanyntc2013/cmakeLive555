@@ -1,7 +1,7 @@
 /**********
 This library is free software; you can redistribute it and/or modify it under
 the terms of the GNU Lesser General Public License as published by the
-Free Software Foundation; either version 2.1 of the License, or (at your
+Free Software Foundation; either version 3 of the License, or (at your
 option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
 
 This library is distributed in the hope that it will be useful, but WITHOUT
@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2016, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2017, Live Networks, Inc.  All rights reserved
 // A test program that reads a DV Video Elementary Stream file,
 // and streams it using RTP
 // main program
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
 
   // Create a 'DV Video RTP' sink from the RTP 'groupsock':
   // (But first, make sure that its buffers will be large enough to handle the huge size of DV frames (as big as 288000).)
-  OutPacketBuffer::maxSize = 300000;
+  OutPacketBuffer::maxSize = 2000000;
   videoSink = DVVideoRTPSink::createNew(*env, &rtpGroupsock, 96);
 
   // Create (and start) a 'RTCP instance' for this RTP sink:
