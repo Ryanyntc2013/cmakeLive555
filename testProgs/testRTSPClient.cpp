@@ -1,4 +1,4 @@
-/**********
+﻿/**********
 This library is free software; you can redistribute it and/or modify it under
 the terms of the GNU Lesser General Public License as published by the
 Free Software Foundation; either version 3 of the License, or (at your
@@ -22,9 +22,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "liveMedia.hh"
 #include "BasicUsageEnvironment.hh"
-
+#include <stdio.h>
 // Forward function definitions:
 
+#define DEBUG_PRINT_NPT
 // RTSP 'response handlers':
 void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString);
 void continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString);
@@ -159,7 +160,12 @@ private:
 
 private:
   u_int8_t* fReceiveBuffer;
+  FILE* file;
   MediaSubsession& fSubsession;
+  int totalCnt;
+  int cycleCnt;
+  int cntPerCyc_shadow;
+  int cntPerCyc;
   char* fStreamId;
 };
 
@@ -470,7 +476,7 @@ StreamClientState::~StreamClientState() {
 
 // Even though we're not going to be doing anything with the incoming data, we still need to receive it.
 // Define the size of the buffer that we'll use:
-#define DUMMY_SINK_RECEIVE_BUFFER_SIZE 100000
+#define DUMMY_SINK_RECEIVE_BUFFER_SIZE 500000
 
 DummySink* DummySink::createNew(UsageEnvironment& env, MediaSubsession& subsession, char const* streamId) {
   return new DummySink(env, subsession, streamId);
@@ -481,11 +487,16 @@ DummySink::DummySink(UsageEnvironment& env, MediaSubsession& subsession, char co
     fSubsession(subsession) {
   fStreamId = strDup(streamId);
   fReceiveBuffer = new u_int8_t[DUMMY_SINK_RECEIVE_BUFFER_SIZE];
+  file = fopen("save.h264", "wb");
+  totalCnt = 0 ;
+  cycleCnt = 0 ;
+  cntPerCyc = 0;
 }
 
 DummySink::~DummySink() {
   delete[] fReceiveBuffer;
   delete[] fStreamId;
+  fclose(file);
 }
 
 void DummySink::afterGettingFrame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
@@ -515,7 +526,21 @@ void DummySink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
 #endif
   envir() << "\n";
 #endif
-  
+    char buff[4];
+    memset(buff, 0 , sizeof(buff));
+    buff[3] = 1;
+    fwrite(buff, sizeof(buff), 1, file);
+    fwrite(fReceiveBuffer, 1, frameSize, file);
+    fflush(file);
+
+    totalCnt++;
+    cntPerCyc++;
+    if (frameSize == 5) {
+        cycleCnt++;
+        cntPerCyc_shadow = cntPerCyc;
+        cntPerCyc = 0;
+    }
+    envir() <<"Total "<<totalCnt<<"    cycleCount "<<cycleCnt<<" cntPerCyc "<<cntPerCyc_shadow<<"\n";
   // Then continue, to request the next frame of data:
   continuePlaying();
 }
